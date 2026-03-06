@@ -1,0 +1,48 @@
+Name: Cancer-ICU-Prediction
+Description: |
+  Clinical dataset and code for cancer patient ICU mortality and 30-day survival prediction.
+Version: 1.0.0
+License: CC-BY-4.0
+Authors:
+  - name: Víctor H Nieto
+    affiliation: "Intensive Care Unit, Luis Carlos Sarmiento Angulo Cancer Treatment and Research Center (CTIC), Bogotá, Colombia"
+    email: vnieto@fctic.org
+  - name: Adriana C Aya
+    affiliation: "Institute of Research and Education, Luis Carlos Sarmiento Angulo Cancer Treatment and Research Center (CTIC), Bogotá, Colombia"
+    email: aayaa@fctic.org
+  - name: Andrés F. Cardona
+    affiliation: "Research and Education Direction, Luis Carlos Sarmiento Angulo Cancer Treatment and Research Center (CTIC), Bogotá, Colombia"
+    email: acardona@fctic.org
+  - name: Edwin Pulido
+    affiliation: "Institute of Research and Education, Luis Carlos Sarmiento Angulo Cancer Treatment and Research Center (CTIC), Bogotá, Colombia"
+    email: epulido@fctic.org
+  - name: Heidy Trujillo
+    affiliation: "Institute of Research and Education, Luis Carlos Sarmiento Angulo Cancer Treatment and Research Center (CTIC), Bogotá, Colombia"
+    email: htrujillogordillo@gmail.com
+  - name: Natalia Sánchez
+    affiliation: "Institute of Research and Education, Luis Carlos Sarmiento Angulo Cancer Treatment and Research Center (CTIC), Bogotá, Colombia"
+    email: nsanchez@fctic.org
+  - name: Daniel Molano
+    affiliation: "Intensive Care Unit, Luis Carlos Sarmiento Angulo Cancer Treatment and Research Center (CTIC), Bogotá, Colombia"
+    email: dalemofra@gmail.com
+  - name: Nicolle Wagner-Gutiérrez
+    affiliation: "University of North Carolina at Chapel Hill, Gillings School of Global Public Health, Chapel Hill, USA"
+    email: nwagnerg@unc.edu
+  - name: Oscar Arrieta
+    affiliation: "General Management, Instituto Nacional de Cancerología - INCAN, Mexico City, Mexico"
+    email: ogarrieta@gmail.com
+  - name: Christian Rolfo
+    affiliation: "Division of Medical Oncology, Department of Internal Medicine, The Ohio State University Comprehensive Cancer Center, Columbus, OH, USA"
+    email: christian.rolfo@osumc.edu
+  - name: Giovanni Nigita
+    affiliation: "Division of Medical Oncology, Department of Internal Medicine, The Ohio State University Comprehensive Cancer Center, Columbus, OH, USA"
+    email: Guiovanni.Nigita@osumc.edu
+  - name: Joseph Nates
+    affiliation: "Department of Critical Care Medicine, Division of Anesthesiology, Critical Care, and Pain Medicine, The University of Texas MD Anderson Cancer Center, Houston, TX, USA"
+    email: jlnates@mdanderson.org
+Funding: |
+  This study did not receive any external funding. 
+  The study was conducted using the institutional resources of the Luis Carlos Sarmiento Angulo Treatment and Research Cancer Center, which provided the logistical and operational support required to carry out the study.
+References:
+  - doi: 10.64898/2026.02.02.26345349
+    source: medRxiv preprint
