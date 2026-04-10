@@ -103,13 +103,15 @@ def limpiar_y_preparar_dataset(df):
         'medicamento_uci___10','medicamento_uci___11','medicamento_uci___14', 'medicamento_uci___16','tipchoque',
         'tip_gav___1', 'tip_gav___2', 'vmni', 'cafo', 'vmi',
         'medicamento_uci___2','medicamento_uci___5','medicamento_uci___6','medicamento_uci___7',
-        'medicamento_uci___12','medicamento_uci___13','medicamento_uci___15'
+        'medicamento_uci___12','medicamento_uci___13','medicamento_uci___15',
+        'objetivoterapeutico', 'diastot'
+        
     ]
     df = df.drop(columns=[c for c in columnas_a_eliminar if c in df.columns], errors='ignore')
 
     # Columnas categóricas
     columnas_categoricas = [
-        'soportere', 'delirium', 'objetivoterapeutico', 'choque','sepsis', 'origen_tumor_cat', 'ecog',
+        'soportere', 'delirium', 'choque','sepsis', 'origen_tumor_cat', 'ecog',
         'result_secuenc_final', 'tto_oncologico', 'nro_ingresos_cat', 'estadio_global', 'sexo',
         'categoria', 'medicamento_uci___1','medicamento_uci___3','medicamento_uci___4',
         'medicamento_uci___8', 'soporte_ventilatorio'
@@ -130,8 +132,8 @@ def limpiar_y_preparar_dataset(df):
     # Renombrar columnas
     column_renames = {
         'sexo': 'sex', 'edad': 'age', 'imc': 'bmi', 'categoria': 'type_of_admission',
-        'objetivoterapeutico': 'therapeutic_objective', 'ecog': 'ecog', 'choque': 'shock',
-        'sepsis': 'sepsis', 'diastot': 'los', 'lactatoing': 'lactate', 'being': 'excess base',
+         'ecog': 'ecog', 'choque': 'shock',
+        'sepsis': 'sepsis',  'lactatoing': 'lactate', 'being': 'excess base',
         'hco3ing': 'bicarbonate', 'pafiing': 'pafi', 'hbing': 'hemoglobin', 'leucosingr': 'leukocytes',
         'neutingr': 'neuthrophils', 'linfingre': 'lymphocytes', 'plaqingr': 'platelet', 'pting': 'pt',
         'pttingr': 'aptt', 'tgoing': 'alt', 'tgping': 'ast', 'bilitorring': 'total_bilirubin',

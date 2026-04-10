@@ -4,7 +4,7 @@ import os
 # Agrega la carpeta src al path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
-# Ahora sí puedes importar tus módulos
+# Importar módulos
 from data_exploration import explorar_dataset
 from preprocessing import analizar_faltantes, imputar_variables_continuas, limpiar_y_preparar_dataset
 from clinical_features import procesar_variables_clinicas
@@ -21,7 +21,7 @@ from sklearn.model_selection import StratifiedKFold
 
 
 # 1️⃣ Cargar dataset
-df = explorar_dataset("df_merged_final.xlsx", nombre_columna_check="mortality")
+df = explorar_dataset("data/df_merged_final.xlsx", nombre_columna_check="mortality")
 
 # 2️⃣ Analizar faltantes
 faltantes_ordenados = analizar_faltantes(df, umbral=20)
@@ -59,8 +59,8 @@ print(f"30survival - Total elementos: {df['30survival'].shape[0]}, NaN: {df['30s
 tabla_final, resumen_pacientes = comparar_para_dos_desenlaces(df, ['mortality', '30survival'])
 
 # Guardar resultados
-tabla_final.to_excel("comparacion_variables_train_val.xlsx", index=False)
-resumen_pacientes.to_excel("resumen_total_pacientes_por_desenlace.xlsx", index=False)
+tabla_final.to_csv("reports/comparacion_variables_train_val.csv", index=False)
+resumen_pacientes.to_csv("reports/resumen_total_pacientes_por_desenlace.csv", index=False)
 
 print("\n✅ Resumen de pacientes por desenlace:")
 print(resumen_pacientes)
@@ -84,7 +84,7 @@ resultados_sobrevida = evaluar_modelos(X_surv, y_surv, '30-day survival', modelo
 
 # 9️⃣  Guardar resultados
 resultados_finales = pd.concat([resultados_mortalidad, resultados_sobrevida], ignore_index=True)
-resultados_finales.to_excel("resultados_modelos_ML_completo.xlsx", index=False)
+resultados_finales.to_csv("reports/resultados_modelos_ML_completo.csv", index=False)
 print(resultados_finales)
 
 #  Heatmap de métricas
