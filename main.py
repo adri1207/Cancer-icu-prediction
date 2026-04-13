@@ -170,9 +170,8 @@ plot_feature_importance(
     filename='feature_importance_30day_survival_academic.png'
 )
 ## Calibration curves
-# 1. Calibración para MORTALITY
-# Aprovechamos 'cat_pipeline_mort' que ya entrenaste en el paso 11
-# Y 'X_mort_imputed' que ya no tiene NaNs
+# 1. Calibración para MORTALITY con catboost
+
 plot_calibration_curves(
     modelos_entrenados={'CatBoost': cat_pipeline_mort}, 
     X_test_dict={"Mortality": X_mort_imputed}, 
@@ -180,8 +179,8 @@ plot_calibration_curves(
     target_name="Mortality"
 )
 
-# 2. Calibración para 30-DAY SURVIVAL
-# Aprovechamos 'cat_pipeline_surv' y 'X_surv_imputed' del paso 11
+# 2. Calibración para 30-DAY SURVIVAL con CatBoost  
+
 plot_calibration_curves(
     modelos_entrenados={'CatBoost': cat_pipeline_surv}, 
     X_test_dict={"30-day survival": X_surv_imputed}, 
