@@ -52,7 +52,7 @@ def evaluar_modelos(X, y, target_name, modelos):
             X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
             y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
 
-            # ... [Tu código de Imputación, Escalado y LASSO igual] ...
+            
             imputer = SimpleImputer(strategy='mean')
             X_train = pd.DataFrame(imputer.fit_transform(X_train), columns=X.columns)
             X_test = pd.DataFrame(imputer.transform(X_test), columns=X.columns)
