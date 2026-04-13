@@ -14,62 +14,67 @@ from sklearn.ensemble import (
 from lightgbm import LGBMClassifier
 from xgboost import XGBClassifier
 from catboost import CatBoostClassifier
+from sklearn.metrics import brier_score_loss
+from sklearn.calibration import CalibrationDisplay
 
 # =====================================
 # 4️⃣ Función para evaluar modelos
 # =====================================
+
+
+def calcular_calibracion_detallada(y_true, y_probs):
+    """Función auxiliar para obtener slope e intercept"""
+    # Evitar log(0) o log(1)
+    y_probs = np.clip(y_probs, 1e-10, 1 - 1e-10)
+    logit_probs = np.log(y_probs / (1 - y_probs)).reshape(-1, 1)
+    
+    lr_calib = LogisticRegression()
+    lr_calib.fit(logit_probs, y_true)
+    
+    slope = lr_calib.coef_[0][0]
+    intercept = lr_calib.intercept_[0]
+    return slope, intercept
+
 def evaluar_modelos(X, y, target_name, modelos):
-    if isinstance(X, np.ndarray):
-        X = pd.DataFrame(X)
-    if isinstance(y, np.ndarray):
-        y = pd.Series(y)
+    if isinstance(X, np.ndarray): X = pd.DataFrame(X)
+    if isinstance(y, np.ndarray): y = pd.Series(y)
 
     resultados = []
     cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
 
     for nombre, modelo in modelos.items():
-        aucs, f1s, recalls, precisions, especificidades, accuracies = [], [], [], [], [], []
+        aucs, f1s, recalls, precisions, especificidades, accuracies, briers = [], [], [], [], [], [], []
+        slopes, intercepts = [], [] # <-- Listas nuevas
+        
         print(f"\n🔹 Evaluando modelo: {nombre} ({target_name})")
 
         for fold, (train_idx, test_idx) in enumerate(cv.split(X, y), 1):
             X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
             y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
 
-            # Imputación
+            # ... [Tu código de Imputación, Escalado y LASSO igual] ...
             imputer = SimpleImputer(strategy='mean')
             X_train = pd.DataFrame(imputer.fit_transform(X_train), columns=X.columns)
             X_test = pd.DataFrame(imputer.transform(X_test), columns=X.columns)
-
-            # Escalado
             scaler = StandardScaler()
             X_train_scaled = scaler.fit_transform(X_train)
             X_test_scaled = scaler.transform(X_test)
-
-            # LASSO selección de variables
             lasso = LogisticRegression(penalty='l1', solver='saga', max_iter=5000, random_state=42)
             lasso.fit(X_train_scaled, y_train)
             mask = np.abs(lasso.coef_).flatten() > 1e-5
             selected_features = X.columns[mask] if any(mask) else X.columns
             X_train_sel, X_test_sel = X_train[selected_features], X_test[selected_features]
 
-            # --- Ajuste para XGBoost binario ---
+            # --- Manejo de clases binarias ---
+            y_train_bin, y_test_bin = y_train, y_test
             if nombre == 'XGBoost':
                 clases_unicas = np.unique(y_train)
-                print(f"Valores únicos en y_train para {nombre} ({target_name}):", clases_unicas)
-
-                if len(clases_unicas) != 2:
-                    raise ValueError(f"XGBoost solo soporta clasificación binaria, pero se detectaron {len(clases_unicas)} clases")
-
-                # Mapear clases a 0 y 1
-                clase_0, clase_1 = clases_unicas
-                y_train_bin = y_train.replace({clase_0: 0, clase_1: 1})
-                y_test_bin = y_test.replace({clase_0: 0, clase_1: 1})
-
+                y_train_bin = y_train.replace({clases_unicas[0]: 0, clases_unicas[1]: 1})
+                y_test_bin = y_test.replace({clases_unicas[0]: 0, clases_unicas[1]: 1})
                 neg, pos = np.bincount(y_train_bin)
                 modelo.set_params(scale_pos_weight=neg / pos)
-            else:
-                y_train_bin, y_test_bin = y_train, y_test  # Para modelos no binarios
 
+            # Entrenamiento y Predicción
             modelo.fit(X_train_sel, y_train_bin)
             y_pred = modelo.predict(X_test_sel)
 
@@ -78,32 +83,43 @@ def evaluar_modelos(X, y, target_name, modelos):
             except:
                 probas = modelo.decision_function(X_test_sel)
 
-            # Cálculo de métricas
-            auc = roc_auc_score(y_test_bin, probas) if len(np.unique(y_test_bin)) > 1 else np.nan
-            f1 = f1_score(y_test_bin, y_pred)
-            recall = recall_score(y_test_bin, y_pred)
-            precision = precision_score(y_test_bin, y_pred)
-            acc = accuracy_score(y_test_bin, y_pred)
-
+            # --- MÉTRICAS DE CALIBRACIÓN ---
+            brier = brier_score_loss(y_test_bin, probas)
+            briers.append(brier)
+            
+            # Cálculo de Slope e Intercept por fold
             try:
-                tn, fp, fn, tp = confusion_matrix(y_test_bin, y_pred).ravel()
-                especificidad = tn / (tn + fp)
+                s, i = calcular_calibracion_detallada(y_test_bin, probas)
+                slopes.append(s)
+                intercepts.append(i)
             except:
-                especificidad = np.nan
+                slopes.append(np.nan)
+                intercepts.append(np.nan)
 
-            aucs.append(auc); f1s.append(f1); recalls.append(recall)
-            precisions.append(precision); accuracies.append(acc); especificidades.append(especificidad)
-            print(f"  Fold {fold}: {len(selected_features)} vars seleccionadas (AUROC={auc:.3f})")
+            # --- Resto de métricas ---
+            aucs.append(roc_auc_score(y_test_bin, probas))
+            f1s.append(f1_score(y_test_bin, y_pred))
+            accuracies.append(accuracy_score(y_test_bin, y_pred))
+            tn, fp, fn, tp = confusion_matrix(y_test_bin, y_pred).ravel()
+            especificidades.append(tn / (tn + fp))
+            precisions.append(precision_score(y_test_bin, y_pred))
+            recalls.append(recall_score(y_test_bin, y_pred))
 
         resultados.append({
-            'Target': target_name, 'Model': nombre,
-            'AUROC': np.nanmean(aucs), 'Accuracy': np.mean(accuracies),
-            'F1': np.mean(f1s), 'Precision': np.mean(precisions),
-            'Recall': np.mean(recalls), 'Specificity': np.mean(especificidades)
+            'Target': target_name, 
+            'Model': nombre,
+            'AUROC': np.nanmean(aucs), 
+            'Accuracy': np.mean(accuracies),
+            'F1': np.mean(f1s), 
+            'Precision': np.mean(precisions),
+            'Recall': np.mean(recalls), 
+            'Specificity': np.mean(especificidades),
+            'Brier Score': np.mean(briers),
+            'Calib Slope': np.nanmean(slopes),     # <-- Nueva columna
+            'Calib Intercept': np.nanmean(intercepts) # <-- Nueva columna
         })
 
     return pd.DataFrame(resultados)
-
 # =====================================
 # 5️⃣ Definir modelos
 # =====================================
@@ -128,7 +144,7 @@ def plot_metric_heatmap(resultados_finales):
     """
     df_melt = resultados_finales.melt(
         id_vars=['Target', 'Model'],
-        value_vars=['AUROC', 'Accuracy', 'F1', 'Precision', 'Recall', 'Specificity']
+        value_vars=['AUROC', 'Accuracy', 'F1', 'Precision', 'Recall', 'Specificity', 'Brier Score', 'Calib Slope', 'Calib Intercept'],
     )
 
     heatmap_data = df_melt.pivot_table(
@@ -142,4 +158,36 @@ def plot_metric_heatmap(resultados_finales):
     plt.title("Figure 2A. Comparison of metrics by model and target", fontsize=16)
     plt.tight_layout()
     plt.savefig('heatmap_metrics_models_targets.png', dpi=300)
+    plt.show()
+
+# Grafica de calibration curves
+
+def plot_calibration_curves(modelos_entrenados, X_test_dict, y_test_dict, target_name):
+    """
+    Genera curvas de calibración para comparar los modelos principales.
+    """
+    plt.figure(figsize=(8, 8))
+    ax = plt.gca()
+    
+    # Dibujar la línea perfecta
+    ax.plot([0, 1], [0, 1], "k:", label="Perfectly calibrated")
+
+    for nombre in ['CatBoost', 'Logistic Regression', 'XGBoost']: # Comparamos los más importantes
+        if nombre in modelos_entrenados:
+            modelo = modelos_entrenados[nombre]
+            # Usar los datos de test que correspondan a ese target
+            X_test = X_test_dict[target_name]
+            y_test = y_test_dict[target_name]
+            
+            # Asegurarse de usar las mismas variables que el modelo final
+            CalibrationDisplay.from_estimator(
+                modelo, X_test, y_test, 
+                name=nombre, ax=ax, n_bins=10
+            )
+
+    ax.set_title(f"Figure 2C. Calibration Plots for {target_name}")
+    plt.legend(loc="lower right")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(f'calibration_{target_name}.png', dpi=300)
     plt.show()

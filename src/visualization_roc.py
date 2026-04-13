@@ -87,11 +87,11 @@ def graficar_curvas_roc_modelos(X, y, modelos_dict, target_name):
     plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='gray', label='Random')
     plt.xlabel('1 - Specificity')
     plt.ylabel('Sensitivity')
-    plt.title(f'Curves ROC - {target_name}')
+    plt.title(f'Figure 2B. ROC Curves - {target_name}')
     plt.legend(loc='lower right')
     plt.tight_layout()
     
-    filename = f"curva_roc_{target_name.lower().replace(' ', '_')}.png"
+    filename = f"Figure_2B_curva_roc_{target_name.lower().replace(' ', '_')}.png"
     plt.savefig(filename, dpi=300, bbox_inches='tight')
     print(f"[✔] Gráfico guardado como: {filename}")
     plt.show()

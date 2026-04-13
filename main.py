@@ -11,12 +11,13 @@ from clinical_features import procesar_variables_clinicas
 from visualization import plot_correlation_matrix, plot_distributions
 from descriptives_analysis import comparar_para_dos_desenlaces
 from visualization_roc import graficar_curvas_roc_modelos
-from modelos import evaluar_modelos, modelos,plot_metric_heatmap
+from modelos import evaluar_modelos, modelos,plot_metric_heatmap, plot_calibration_curves
 from shap_analysis import entrenar_catboost_pipeline, calcular_shap_values, plot_summary_shap, plot_decision_shap
 from feature_importance import obtener_importancia_features, plot_feature_importance
 import pandas as pd
 import numpy as np 
 from sklearn.model_selection import StratifiedKFold 
+from sklearn.model_selection import train_test_split
 
 
 
@@ -91,14 +92,15 @@ print(resultados_finales)
 plot_metric_heatmap(resultados_finales)
 
 
-# 1️⃣0️⃣  Curvas ROC
-# Asegurar que las etiquetas sean 0 y 1
+# 1️⃣0️⃣  Curvas ROC 
+# ROC curves
 y_mort = y_mort.replace({2: 1, 1: 0}) if y_mort.max() == 2 else y_mort
 y_surv = y_surv.replace({2: 1, 1: 0}) if y_surv.max() == 2 else y_surv
 
 
 graficar_curvas_roc_modelos(X_mort, y_mort, modelos, "Mortality")
 graficar_curvas_roc_modelos(X_surv, y_surv, modelos, "30-day survival")
+
 
 ## 1️⃣1️⃣ SHAP Analysis for Mortality Prediction with CatBoost  ##
 
@@ -166,4 +168,23 @@ plot_feature_importance(
     df_importancia_surv,
     title='Figure 3B: Feature Importance - CatBoost 30-Day Survival Model',
     filename='feature_importance_30day_survival_academic.png'
+)
+## Calibration curves
+# 1. Calibración para MORTALITY
+# Aprovechamos 'cat_pipeline_mort' que ya entrenaste en el paso 11
+# Y 'X_mort_imputed' que ya no tiene NaNs
+plot_calibration_curves(
+    modelos_entrenados={'CatBoost': cat_pipeline_mort}, 
+    X_test_dict={"Mortality": X_mort_imputed}, 
+    y_test_dict={"Mortality": y_mort}, 
+    target_name="Mortality"
+)
+
+# 2. Calibración para 30-DAY SURVIVAL
+# Aprovechamos 'cat_pipeline_surv' y 'X_surv_imputed' del paso 11
+plot_calibration_curves(
+    modelos_entrenados={'CatBoost': cat_pipeline_surv}, 
+    X_test_dict={"30-day survival": X_surv_imputed}, 
+    y_test_dict={"30-day survival": y_surv}, 
+    target_name="30-day survival"
 )
